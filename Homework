@@ -1,0 +1,206 @@
+#详细代码、生成的网页和数据请见压缩包
+
+#1.气泡图
+library(ggplot2)
+#选取了沪深300的10个行业作为样本
+bubble<-read.csv("C:/Users/miaxu/Desktop/bubble/bubble5.csv") 
+q<-ggplot(data = bubble,mapping = aes(x = 市净率,y = 涨跌幅,colour = 行业))+
+  geom_point(aes(size = 市值))+ #x轴为市净率，y轴为涨跌幅,颜色为行业，气泡大小由市值决定
+  theme(panel.background = element_rect(fill='black'),panel.grid.major=element_line(size=0.001,colour = 'black'))+ ylim(-10,10)
+q
+
+#2.蜡烛图和线图
+#平安银行
+library(dplyr)
+library(plyr)
+library(tidyverse)
+library(lubridate)
+library(xts)
+library(quantmod)
+library(data.table)
+library(DBI)
+library(readxl)
+## 功能1：个股价格趋势与技术分析
+绘制日K线图，添加交易量、MACD、SMA指标
+```{r}
+#从锐思下载数据
+price1=read_excel("C:/Users/miaxu/Desktop/k线图/DRESSTK_2016__02A09A94142_(1).xls",sheet=1,na="NA")
+#stkcd      股票代码     Stock Code
+#lstknm      最新股票名称     Latest Stock Name
+#date      日期     Date
+#prevclpr      前收盘价     Previous Close Price
+#oppr      开盘价     Open Price
+#hipr      最高价     High Price
+#lopr      最低价     Low Price
+#clpr      收盘价     Close Price
+#adjclpr1      复权价1     Adjusted Price1
+#trdvol      成交量     Trading Volume
+#dret      日收益率     Daily Return
+date=as.Date(price1$Date,format="%Y-%m-%d")
+# 转换为时间序列，对每一列重命名
+price_xts <- xts(as.data.table(price1[c("Date","Oppr","Hipr","Lopr","Clpr","AdjClpr1","Trdvol")])[,!1],order.by = date) %>%
+  rename(c(Oppr='000001.SS.Open',Hipr='000001.SS.High',Lopr='000001.SS.Low',Clpr='000001.SS.Close',Trdvol='000001.SS.Volume',AdjClpr1='000001.SS.Adjusted'))
+# 绘制最近6个月的蜡烛图
+chartSeries(last(price_xts, '6 months'),name="平安银行",theme='white',up.col='green',dn.col='red',show.grid = TRUE)
+# 绘制最近6个月的蜡烛图，添加交易量、MACD、SMA指标
+chartSeries(last(price_xts, '6 months'),name="平安银行",theme='white',up.col='green',dn.col='red',TA="addVo();addMACD();addSMA(n=10)")
+# 绘制最近6个月的线图，添加交易量、MACD、SMA指标
+chartSeries(last(price_xts, '6 months'),name="平安银行",type="line",theme='white',TA="addVo();addMACD();addSMA(n=10)")
+
+```
+
+#上证指数
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(plyr)
+library(tidyverse)
+library(lubridate)
+library(xts)
+library(quantmod)
+library(data.table)
+library(DBI)
+library(readxl)
+```
+## 功能1：个股价格趋势与技术分析
+绘制日K线图，添加交易量、MACD、SMA指标
+```{r}
+#从Resset下载数据
+price1=read_excel("C:/Users/miaxu/Desktop/k线图/IDXQTTN_51146DF2E8A_(1).xls",sheet=1,na="NA")
+#IdxCd      指数代码     Index Code
+#IdxNm      指数名称     Index Name
+#TrdDt      交易日期     Trade Date
+#PrevClPr      昨收盘价     Previous Close Price
+#OpPr      开盘价     Open Price
+#HiPr      最高价     High Price
+#LoPr       最低价     Low Price
+#ClPr      收盘价     Close Price
+#TrdVol      成交量     Trading Volume
+#TrdSum      成交金额     Trading Sum
+date=as.Date(price1$TrdDt,format="%Y-%m-%d")
+# 转换为时间序列，对每一列重命名
+price1_xts <- xts(as.data.table(price1[c("TrdDt","OpPr","HiPr","LoPr","ClPr","TrdVol")])[,!1],order.by = date) %>%
+  rename(c(OpPr='000001.Open',HiPr='000001.High',LoPr='000001.Low',ClPr='000001.Close',TrdVol='000001.Volume'))
+# 绘制最近3个月的蜡烛图
+chartSeries(last(price1_xts, '3 months'),name="上证指数",theme='white',up.col='green',dn.col='red',show.grid = TRUE)
+# 绘制最近3个月的蜡烛图，添加交易量、MACD、SMA指标
+chartSeries(last(price_xts, '3 months'),name="上证指数",theme='white',up.col='green',dn.col='red',TA="addVo();addMACD();addSMA(n=10)")
+# 绘制最近3个月的线图，添加交易量、MACD、SMA指标
+chartSeries(last(price_xts, '3 months'),name="上证指数",type="line",theme='white',TA="addVo();addMACD();addSMA(n=10)")
+```
+
+#3.treemap
+library(treemap)
+library(treemapify)
+library(RColorBrewer)
+library(ggplot2)
+
+data <- read.csv('C:/Users/miaxu/Desktop/map/map.csv',header=T)
+
+data$color <- rainbow(nlevels(data$stock))[data$stock] #更改颜色
+color <- c( "#9E3649", "#FF0017","#008B4F", "#00AE51")
+
+palette.HCL.options <- list(hue_start=270, hue_end=360+150)
+
+treemap(data,
+        index=c("class", "stock1"),
+        vSize="market_cap",
+        vColor="percent",
+        type="value",
+        #palette.HCL.options=palette.HCL.options, #设置颜色
+        palette=(values=color),
+        #palette="-RdGy",
+        format.legend = list(scientific = FALSE, big.mark = " "),
+        fontsize.title=0, #去掉标题
+        fontsize.legend=0, #去掉图例
+        fontcolor.labels="white",fontface.labels=2,fontsize.labels = c(12,20), #标签颜色，加粗
+        fontfamily.labels="STSong", #解决中文乱码
+        bg.labels=0, #聚类标签的背景颜色
+        align.labels=list(c("left", "top"), c("center", "center")), #改变标签位置，前面为聚类标签，后面为每个stock标签
+        overlap.labels=0,  #0-1，确定标签之间重叠程度，0表示如果较高级别的标签重叠，则不打印较低级别的标签 
+       )
+              
+#4.板块层级图
+library(portfolio)
+#A-农林牧渔
+#收益率数据
+DRET1=read_excel("C:/Users/miaxu/Desktop/板块层级图/农林牧渔.xls",sheet=1)
+#市值数据
+DMV1=read_excel("C:/Users/miaxu/Desktop/板块层级图/农林牧渔-市值.xls",sheet=1)
+data1 <- inner_join(DRET1,DMV1,by="Stkcd")[c("Stkcd","Lstknm","Csrciccd1","Csrciccd2","Dret","Dmc")]
+a<-map.market(id = data1$Lstknm,
+           area = data1$Dmc,  #面积与市值成比例
+           #group = data1$Lstknm, #分股票显示
+           group = data1$Csrciccd2, #按细分行业分类
+           color = data1$Dret)
+a
+#B-采矿业
+#收益率数据
+DRET2=read_excel("C:/Users/Administrator/Desktop/采矿业.xls",sheet=1)
+#市值数据
+DMV2=read_excel("C:/Users/Administrator/Desktop/采矿业-市值.xls",sheet=1)
+data2 <- inner_join(DRET2,DMV2,by="Stkcd")[c("Stkcd","Lstknm","Csrciccd1","Csrciccd2","Dret","Dmc")]
+b<-map.market(id = data2$Lstknm,
+              area = data2$Dmc,  #面积与市值成比例
+              #group = data2$Lstknm, #分股票显示
+              group = data2$Csrciccd2, #按细分行业分类
+              color = data2$Dret)
+
+#C-制造业
+#收益率数据
+DRET3=read_excel("C:/Users/Administrator/Desktop/制造业.xls",sheet=1)
+#市值数据
+DMV3=read_excel("C:/Users/Administrator/Desktop/制造业-市值.xls",sheet=1)
+data3 <- inner_join(DRET3,DMV3,by="Stkcd")[c("Stkcd","Lstknm","Csrciccd1","Csrciccd2","Dret","Dmc")]
+c<-map.market(id = data3$Lstknm,
+              area = data3$Dmc,  #面积与市值成比例
+              #group = data3$Lstknm, #分股票显示
+              group = data3$Csrciccd2, #按细分行业分类
+              color = data3$Dret)
+              
+#5.涨跌图
+library(purrr)
+library(ggplot2)
+
+##### figure1
+#2019.9.30 上交所A股(剔除ST*）涨跌比例
+data1 <- read.csv('C:/Users/ecnu_/Desktop/2019.9.30 上交所A股(剔除ST）涨跌数量计算.csv',header=T)
+
+data1$trend = factor(data1$trend, levels=c('declining','stay','advancing'))
+
+ggplot(data1,aes(' ',stock,fill=trend))+
+  geom_bar(stat="identity",position="stack",width = 0.05)+ #stack:堆积柱状图，width:柱状图宽度
+  theme_bw()+
+  #scale_fill_brewer(palette='Set1')+ #柱状图颜色，使用RColorBrewer
+  scale_fill_manual(values=c("#66CC33","#CCCCCC","#FF6666"))+
+  guides(fill=guide_legend(title="null"))+
+  guides(fill=F)  + #不显示图例
+  #不显示各种图标
+  theme(panel.grid = element_blank(),panel.border = element_blank(),
+        axis.text = element_blank(),axis.ticks = element_blank(),
+        text = element_blank())+
+  #显示数字
+  geom_text(aes(y=position,label=paste(stock,'%',sep = '')),size=3,col='white')+
+  geom_text(aes(y=position_num,label=number),size=3,
+            col=c('#FF6666','','#66CC33'),
+            vjust=-1.5)+
+  geom_text(aes(y=position_trend,label=trend1),size=3,col='black',vjust=-1.5)+
+  coord_flip() #将图形横纵坐标互换
+  
+#6.柱状图
+library(ggplot2) 
+library(readxl)
+enrich <- read_excel("C:/Users/miaxu/Desktop/柱状图/bar.xls",sheet=1)  
+#读取不同指数的收益率数据
+enrich1 <- enrich[order(enrich$IdxDRet),]   
+#对结果按照IdxDRet进行从小到大排序，保证最显著的通路在前
+IdxCd1<-abs(enrich1[,2])
+p <- ggplot(data=enrich1,aes(x=IdxCd,y=IdxDRet,fill=IdxDRet)) 
+p
+p1 <- p + geom_bar(stat="identity") + coord_flip()#反转x轴与y轴   
+p1
+p2 <- p1 + theme(panel.background=element_rect(fill='transparent',color='gray'),
+                 axis.text.y=element_text(color="black",size=12))
+p2
+p3 <- p2  + scale_fill_gradient(low="red",high="green")
+p3
